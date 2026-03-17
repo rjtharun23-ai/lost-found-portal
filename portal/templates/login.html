@@ -1,0 +1,204 @@
+<!-- THIS IS MY LOGIN TEMPLATE v2 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SLT Portal - Login</title>
+  <style>
+    :root{
+      --primary:#1f4c9a;
+      --primary-dark:#163a77;
+      --card:#ffffff;
+      --text:#1e293b;
+      --muted:#64748b;
+      --danger:#ef4444;
+      --border:#e5e7eb;
+    }
+
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      min-height:100vh;
+      background: url("/static/images/lost_found_pg.png") no-repeat center center fixed;
+      background-size: cover;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+    }
+
+    /* Dark overlay for readability */
+    body::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,0.35);
+    }
+
+    .card{
+      position:relative;
+      width: 420px;
+      max-width: 92%;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+      padding: 26px 26px 22px;
+    }
+
+    .title{
+      text-align:center;
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 0.3px;
+    }
+
+    .subtitle{
+      text-align:center;
+      margin: 0 0 18px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .alert{
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      text-align:center;
+    }
+
+    .form-group{
+      margin-bottom: 12px;
+    }
+
+    .input{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 12px;
+      outline: none;
+      font-size: 14px;
+      box-sizing:border-box;
+    }
+
+    .input:focus{
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+    }
+
+    .role-box{
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin: 12px 0 14px;
+      background: #f8fafc;
+    }
+
+    .role-label{
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .role-options{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
+    .role-pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background:white;
+      cursor:pointer;
+      font-size: 13px;
+      user-select:none;
+    }
+
+    .role-pill input{
+      cursor:pointer;
+    }
+
+    .btn{
+      width:100%;
+      border:none;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .btn:hover{
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .hint{
+      margin-top: 10px;
+      text-align:center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1 class="title">SLT Portal</h1>
+    <p class="subtitle">Lost &amp; Found Things Portal</p>
+
+    {% if error %}
+      <div class="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="">
+      {% csrf_token %}
+
+      <div class="role-box">
+        <div class="role-label">Login as</div>
+        <div class="role-options">
+          <label class="role-pill">
+            <input type="radio" name="role" value="student" required>
+            Student
+          </label>
+
+          <label class="role-pill">
+            <input type="radio" name="role" value="admin" required>
+            Admin
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <input class="input" type="text" name="username" placeholder="Username" required>
+      </div>
+
+      <div class="form-group">
+        <input class="input" type="password" name="password" placeholder="Password" required>
+      </div>
+
+      <button class="btn" type="submit">Login</button>
+
+      <div class="hint">
+        Admin login works only with a <b>superuser</b> account.
+      </div>
+    </form>
+  </div>
+</body>
+</html>

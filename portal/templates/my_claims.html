@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="page-title">
+  <h1>My Claim Requests</h1>
+  <p>Track the status of all your item claims.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card pending">
+    <div class="stat-number">{{ pending_count }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+  <div class="stat-card approved">
+    <div class="stat-number">{{ approved_count }}</div>
+    <div class="stat-label">Approved</div>
+  </div>
+  <div class="stat-card rejected">
+    <div class="stat-number">{{ rejected_count }}</div>
+    <div class="stat-label">Rejected</div>
+  </div>
+</div>
+
+<!-- Claims List -->
+{% if claims %}
+  <div class="claims-container">
+    {% for claim in claims %}
+      <div class="claim-card claim-{{ claim.status }}">
+        <div class="claim-header">
+          <div>
+            <h3>{{ claim.item.title }}</h3>
+            <p class="claim-item-type">
+              {% if claim.item.item_type == "Lost" %}
+                <span class="badge badge-lost">Lost</span>
+              {% else %}
+                <span class="badge badge-found">Found</span>
+              {% endif %}
+            </p>
+          </div>
+          <div class="claim-status">
+            {% if claim.status == 'pending' %}
+              <span class="status-badge status-pending">⏳ Pending</span>
+            {% elif claim.status == 'approved' %}
+              <span class="status-badge status-approved">✓ Approved</span>
+            {% else %}
+              <span class="status-badge status-rejected">✗ Rejected</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="claim-details">
+          <p><strong>Location:</strong> {{ claim.item.location }}</p>
+          <p><strong>Description:</strong> {{ claim.item.description }}</p>
+          <p><strong>Requested on:</strong> {{ claim.date_requested|date:"M d, Y H:i" }}</p>
+          
+          {% if claim.message %}
+            <p><strong>Your Message:</strong> {{ claim.message }}</p>
+          {% endif %}
+        </div>
+
+        {% if claim.status == 'approved' %}
+          <div class="claim-footer success">
+            <p>🎉 Your claim has been approved! Please contact the item owner or administrator for further details.</p>
+          </div>
+        {% elif claim.status == 'rejected' %}
+          <div class="claim-footer error">
+            <p>❌ Your claim has been rejected. You can submit another claim request if needed.</p>
+          </div>
+        {% else %}
+          <div class="claim-footer info">
+            <p>⏳ Your claim is under review. An administrator will evaluate your request soon.</p>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="no-claims">
+    <p>You haven't made any claim requests yet.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">Browse Items</a>
+  </div>
+{% endif %}
+
+{% endblock %}

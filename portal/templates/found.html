@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+
+<div class="page-title">
+  <h1>Found Items</h1>
+  <p>Browse items that have been found. Claim if it belongs to you!</p>
+</div>
+
+<div class="grid">
+  {% if items %}
+    {% for item in items %}
+      <div class="card">
+        {% if item.image %}
+          <img class="card-img" src="{{ item.image.url }}" alt="{{ item.title }}">
+        {% else %}
+          <img class="card-img" src="{% static 'images/lost_found_pg.png' %}" alt="Lost & Found">
+        {% endif %}
+
+        <div class="card-body">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <h3 style="margin:0;">{{ item.title }}</h3>
+            <span class="badge badge-found">Found</span>
+          </div>
+
+          <p><strong>Description:</strong> {{ item.description }}</p>
+          <p><strong>Location:</strong> {{ item.location }}</p>
+          <p><strong>Date:</strong> {{ item.date_posted }}</p>
+
+          {% if item.id in user_claims %}
+            {% with claim=user_claims|get_item:item.id %}
+              <div class="claim-status-box">
+                {% if claim.status == 'pending' %}
+                  <span class="status-badge status-pending">⏳ Claim Pending</span>
+                  <p class="status-text">Waiting for admin approval</p>
+                {% elif claim.status == 'approved' %}
+                  <span class="status-badge status-approved">✓ Claim Approved</span>
+                  <p class="status-text">Your claim has been approved!</p>
+                {% elif claim.status == 'rejected' %}
+                  <span class="status-badge status-rejected">✗ Claim Rejected</span>
+                  <p class="status-text">Your claim was not approved</p>
+                {% endif %}
+              </div>
+            {% endwith %}
+          {% elif not item.is_claimed %}
+            <a class="btn-claim" href="{% url 'claim_item' item.id %}">Claim Item</a>
+          {% else %}
+            <p class="claimed">Already Claimed</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No found items available.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

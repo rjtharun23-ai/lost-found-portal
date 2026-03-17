@@ -1,0 +1,107 @@
+/* Full page background */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1d3557, #457b9d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Center container */
+.login-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Card */
+.login-card {
+    background: white;
+    padding: 40px;
+    width: 350px;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+/* Title */
+.portal-title {
+    margin: 0;
+    font-size: 28px;
+    color: #1d3557;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: gray;
+    margin-bottom: 30px;
+}
+
+/* Input fields */
+.input-group {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-bottom: 2px solid #ccc;
+    outline: none;
+    font-size: 14px;
+}
+
+.input-group label {
+    position: absolute;
+    left: 0;
+    top: 10px;
+    font-size: 14px;
+    color: #aaa;
+    pointer-events: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: -10px;
+    font-size: 12px;
+    color: #1d3557;
+}
+
+/* Radio buttons */
+.radio-group {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+/* Button */
+.login-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #1d3557;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-btn:hover {
+    background: #457b9d;
+}
+
+/* Error message */
+.error-box {
+    background: #ffdddd;
+    color: red;
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 13px;
+}
