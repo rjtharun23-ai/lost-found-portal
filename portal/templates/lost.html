@@ -41,6 +41,9 @@
                 {% elif claim.status == 'rejected' %}
                   <span class="status-badge status-rejected">✗ Claim Rejected</span>
                   <p class="status-text">Your claim was not approved</p>
+                {% elif claim.status == 'claimed' %}
+                  <span class="status-badge status-claimed">✓ Item Claimed</span>
+                  <p class="status-text">You have successfully claimed this item!</p>
                 {% endif %}
               </div>
             {% endwith %}

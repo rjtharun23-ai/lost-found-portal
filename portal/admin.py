@@ -3,7 +3,9 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Item, ClaimRequest
+from django.utils import timezone
+from datetime import timedelta
+from .models import Item, ClaimRequest, UserBan
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -129,7 +131,7 @@ class ClaimRequestAdmin(admin.ModelAdmin):
     list_display = ('user', 'item', 'status', 'date_requested')
     list_filter = ('status', 'date_requested')
     search_fields = ('user__username', 'item__title')
-    readonly_fields = ('date_requested', 'item', 'user')
+    readonly_fields = ('date_requested',)
     
     fieldsets = (
         ('Claim Information', {
@@ -144,7 +146,11 @@ class ClaimRequestAdmin(admin.ModelAdmin):
         }),
     )
     
-    actions = ['approve_claims', 'reject_claims']
+    def has_add_permission(self, request):
+        """Prevent adding claims from admin - only via student interface"""
+        return False
+    
+    actions = ['approve_claims', 'reject_claims', 'ban_user_7days', 'ban_user_30days', 'ban_user_permanent']
     
     def approve_claims(self, request, queryset):
         """Admin action to approve claims"""
@@ -168,7 +174,93 @@ class ClaimRequestAdmin(admin.ModelAdmin):
             updated += 1
         self.message_user(request, f"✗ Rejected {updated} claim(s). Notification emails sent to users.")
     reject_claims.short_description = "Reject selected claims"
+    
+    def ban_user_7days(self, request, queryset):
+        """Ban user for 7 days for fake claims"""
+        updated = 0
+        for claim in queryset:
+            user = claim.user
+            ban_until = timezone.now() + timedelta(days=7)
+            user_ban, created = UserBan.objects.get_or_create(user=user)
+            user_ban.is_banned = True
+            user_ban.banned_until = ban_until
+            user_ban.ban_reason = f"Fake or fraudulent claim request detected (Item: {claim.item.title})"
+            user_ban.save()
+            updated += 1
+        self.message_user(request, f"✓ Banned {updated} user(s) for 7 days due to fake claims.")
+    ban_user_7days.short_description = "⛔ Ban user for 7 days (Fake claim)"
+    
+    def ban_user_30days(self, request, queryset):
+        """Ban user for 30 days for fake claims"""
+        updated = 0
+        for claim in queryset:
+            user = claim.user
+            ban_until = timezone.now() + timedelta(days=30)
+            user_ban, created = UserBan.objects.get_or_create(user=user)
+            user_ban.is_banned = True
+            user_ban.banned_until = ban_until
+            user_ban.ban_reason = f"Fake or fraudulent claim request detected (Item: {claim.item.title})"
+            user_ban.save()
+            updated += 1
+        self.message_user(request, f"✓ Banned {updated} user(s) for 30 days due to fake claims.")
+    ban_user_30days.short_description = "⛔ Ban user for 30 days (Fake claim)"
+    
+    def ban_user_permanent(self, request, queryset):
+        """Permanently ban user for fake claims"""
+        updated = 0
+        for claim in queryset:
+            user = claim.user
+            user_ban, created = UserBan.objects.get_or_create(user=user)
+            user_ban.is_banned = True
+            user_ban.banned_until = None  # Permanent ban
+            user_ban.ban_reason = f"Permanent ban: Fake or fraudulent claim request detected (Item: {claim.item.title})"
+            user_ban.save()
+            updated += 1
+        self.message_user(request, f"✓ Permanently banned {updated} user(s) due to fake claims.")
+    ban_user_permanent.short_description = "⛔ Permanently ban user (Fake claim)"
 
 
 admin.site.register(Item, ItemAdmin)
 admin.site.register(ClaimRequest, ClaimRequestAdmin)
+
+
+class UserBanAdmin(admin.ModelAdmin):
+    list_display = ('user', 'is_banned', 'ban_status', 'date_banned')
+    list_filter = ('is_banned', 'date_banned')
+    search_fields = ('user__username', 'user__email', 'ban_reason')
+    readonly_fields = ('date_banned', 'user')
+    
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user', 'date_banned')
+        }),
+        ('Ban Status', {
+            'fields': ('is_banned', 'banned_until')
+        }),
+        ('Ban Reason', {
+            'fields': ('ban_reason',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def ban_status(self, obj):
+        """Display current ban status"""
+        if not obj.is_banned:
+            return "❌ Not Banned"
+        if obj.banned_until is None:
+            return "🔴 Permanently Banned"
+        if obj.is_currently_banned():
+            remaining = obj.banned_until - timezone.now()
+            days = remaining.days
+            hours = remaining.seconds // 3600
+            return f"⏰ Temporarily Banned ({days}d {hours}h remaining)"
+        else:
+            return "✅ Ban Expired"
+    ban_status.short_description = "Current Status"
+    
+    def has_add_permission(self, request):
+        """Allow admins to manage bans only through actions"""
+        return False
+
+
+admin.site.register(UserBan, UserBanAdmin)

@@ -4,6 +4,19 @@
 
 {% block content %}
 
+<!-- Ban Alert -->
+{% if ban_info %}
+<div class="ban-alert">
+  <div class="ban-icon">🚫</div>
+  <div class="ban-content">
+    <h3>Account Suspended</h3>
+    <p><strong>Status:</strong> {% if ban_info.is_permanent %}Permanently Suspended{% else %}Temporarily Suspended until {{ ban_info.until|date:"Y-m-d" }}{% endif %}</p>
+    <p><strong>Reason:</strong> {{ ban_info.reason }}</p>
+    <p>You cannot add new items or claim items while your account is suspended.</p>
+  </div>
+</div>
+{% endif %}
+
 <div class="page-title">
   <h1>All Items</h1>
   <p>Browse lost & found items posted in the portal. Use search to find by title or location.</p>
@@ -47,6 +60,9 @@
               {% elif claim.status == 'rejected' %}
                 <span class="status-badge status-rejected">✗ Claim Rejected</span>
                 <p class="status-text">Your claim was not approved</p>
+              {% elif claim.status == 'claimed' %}
+                <span class="status-badge status-claimed">✓ Item Claimed</span>
+                <p class="status-text">You have successfully claimed this item!</p>
               {% endif %}
             </div>
           {% endwith %}

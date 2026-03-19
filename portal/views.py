@@ -3,7 +3,30 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.contrib import messages
-from .models import Item, ClaimRequest
+from .models import Item, ClaimRequest, UserBan
+
+
+# =========================
+# HELPER FUNCTION TO CHECK USER BAN
+# =========================
+def get_user_ban_info(user):
+    """Get ban information for a user"""
+    if not user.is_authenticated or user.is_superuser:
+        return None
+    
+    try:
+        user_ban = user.user_ban
+        if user_ban.is_currently_banned():
+            return {
+                'is_banned': True,
+                'reason': user_ban.ban_reason,
+                'until': user_ban.banned_until,  # Can be None for permanent ban
+                'is_permanent': user_ban.banned_until is None
+            }
+    except UserBan.DoesNotExist:
+        pass
+    
+    return None
 
 
 # =========================
@@ -37,6 +60,15 @@ def login_view(request):
         if role == "student":
             if user.is_superuser:
                 return render(request, "login.html", {"error": "Admin account cannot login as Student."})
+            
+            # Check if user is banned
+            ban_info = get_user_ban_info(user)
+            if ban_info:
+                ban_type = "permanently" if ban_info['is_permanent'] else f"until {ban_info['until'].strftime('%Y-%m-%d')}"
+                return render(request, "login.html", {
+                    "error": f"Your account has been {ban_type} suspended due to: {ban_info['reason']}"
+                })
+            
             login(request, user)
             return redirect("home")
 
@@ -72,11 +104,15 @@ def home(request):
     if request.user.is_authenticated and not request.user.is_superuser:
         claims = ClaimRequest.objects.filter(user=request.user).select_related('item')
         user_claims = {claim.item_id: claim for claim in claims}
+    
+    # Get user ban info
+    ban_info = get_user_ban_info(request.user) if request.user.is_authenticated else None
 
     return render(request, "home.html", {
         "items": items,
         "q": q,
-        "user_claims": user_claims
+        "user_claims": user_claims,
+        "ban_info": ban_info
     })
 
 
@@ -126,6 +162,13 @@ def add_item(request):
     # Block admin from using student add page (optional)
     if request.user.is_superuser:
         return redirect("/admin/")
+    
+    # Check if user is banned
+    ban_info = get_user_ban_info(request.user)
+    if ban_info:
+        ban_type = "permanently" if ban_info['is_permanent'] else f"until {ban_info['until'].strftime('%Y-%m-%d')}"
+        messages.error(request, f"Your account has been {ban_type} suspended. You cannot add items.")
+        return redirect("home")
 
     if request.method == "POST":
         title = request.POST.get("title")
@@ -153,6 +196,13 @@ def add_item(request):
 @login_required
 def claim_item(request, item_id):
     item = get_object_or_404(Item, id=item_id)
+    
+    # Check if user is banned
+    ban_info = get_user_ban_info(request.user)
+    if ban_info:
+        ban_type = "permanently" if ban_info['is_permanent'] else f"until {ban_info['until'].strftime('%Y-%m-%d')}"
+        messages.error(request, f"Your account has been {ban_type} suspended. You cannot claim items.")
+        return redirect("home")
 
     # Check if user already claimed this item
     existing_claim = ClaimRequest.objects.filter(item=item, user=request.user).first()
@@ -186,12 +236,14 @@ def my_claims(request):
     pending_count = claims.filter(status='pending').count()
     approved_count = claims.filter(status='approved').count()
     rejected_count = claims.filter(status='rejected').count()
+    claimed_count = claims.filter(status='claimed').count()
     
     context = {
         'claims': claims,
         'pending_count': pending_count,
         'approved_count': approved_count,
         'rejected_count': rejected_count,
+        'claimed_count': claimed_count,
     }
     
     return render(request, "my_claims.html", context)

@@ -22,6 +22,10 @@
     <div class="stat-number">{{ rejected_count }}</div>
     <div class="stat-label">Rejected</div>
   </div>
+  <div class="stat-card claimed">
+    <div class="stat-number">{{ claimed_count }}</div>
+    <div class="stat-label">Claimed</div>
+  </div>
 </div>
 
 <!-- Claims List -->
@@ -45,6 +49,8 @@
               <span class="status-badge status-pending">⏳ Pending</span>
             {% elif claim.status == 'approved' %}
               <span class="status-badge status-approved">✓ Approved</span>
+            {% elif claim.status == 'claimed' %}
+              <span class="status-badge status-claimed">✓ Claimed</span>
             {% else %}
               <span class="status-badge status-rejected">✗ Rejected</span>
             {% endif %}
@@ -64,6 +70,10 @@
         {% if claim.status == 'approved' %}
           <div class="claim-footer success">
             <p>🎉 Your claim has been approved! Please contact the item owner or administrator for further details.</p>
+          </div>
+        {% elif claim.status == 'claimed' %}
+          <div class="claim-footer success">
+            <p>✓ You have successfully claimed this item!</p>
           </div>
         {% elif claim.status == 'rejected' %}
           <div class="claim-footer error">
